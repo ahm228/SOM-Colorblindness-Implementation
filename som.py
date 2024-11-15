@@ -31,23 +31,27 @@ def find_closest_color(som, input_color):
     winner = som.winner(input_color)
     weights = som.get_weights()
     closest_color = weights[winner]
-    closest_color = (closest_color * 255).astype(int)
-    distances = np.linalg.norm(colors - closest_color / 255, axis=1)
+    distances = np.linalg.norm(colors - closest_color, axis=1)
     closest_label = labels[np.argmin(distances)]
-    return closest_label, closest_color
+    return closest_label, (closest_color * 255).astype(int)
 
 # Function to process an image and recognize colors
 def process_image(image_path, som):
     image = Image.open(image_path).convert('RGB')
-    image = image.resize((256, 256))  # Resize for faster processing
+    image = image.resize((256, 256))  # Resize to 256x256 for better readability
     image_data = np.array(image)
 
-    recognized_colors = []
+    recognized_colors = []  # Use a list to track unique color-label pairs
+    seen = set()  # Set to keep track of seen pairs
+
     for row in image_data:
         for pixel in row:
             pixel = pixel[:3]  # Ensure pixel is RGB (ignore alpha if present)
             label, matched_color = find_closest_color(som, pixel)
-            recognized_colors.append((tuple(pixel), label))
+            pair = (tuple(matched_color), label)  # Store SOM-matched color, not input pixel
+            if pair not in seen:
+                seen.add(pair)
+                recognized_colors.append(pair)
 
     # Visualize the result
     output_image = np.zeros_like(image_data)
@@ -69,7 +73,8 @@ try:
     output_image.show()
 
     # Print recognized colors (optional)
-    for original, label in recognized_colors[:10]:  # Display first 10 for brevity
+    print("Unique Recognized Colors:")
+    for original, label in recognized_colors:  # Display unique recognized colors
         print(f"Original Color: {original}, Recognized Label: {label}")
 except FileNotFoundError:
     print("The specified image file was not found. Please check the path and try again.")
