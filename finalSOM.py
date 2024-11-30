@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from minisom import MiniSom  
+from minisom import MiniSom  # Self-Organizing Map
 import os
 
 
-# Predefined list of image paths (these files are on my laptop, you can comment them out an insert your own to test)
+# Predefined list of image paths (these files are on my laptop, i can email if needed)
 PREDEFINED_IMAGE_PATHS = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\1.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\2.jpg',
@@ -95,7 +95,7 @@ def denormalize_image(image):
 def resize_image(image, target_size=(256, 256)):
     return cv2.resize(image, target_size, interpolation=cv2.INTER_AREA)
 
-# Function to train the SOM with multiple images 
+# Function to train the SOM with multiple images
 def train_on_multiple_images(image_paths, som_size=16): #som size can be editted make images better or worse depends
     all_training_data = []
 
@@ -148,9 +148,8 @@ def decode_with_som(encoded_image, som, batch_size=1024):
 
     return np.array(decoded_image).reshape(encoded_image.shape)
 
-
 # Function to display the output of what the SOM does (commented out values just change whats outputted)
-def display_and_save_images(original, transformed, mode): #output
+def display_and_save_images(original, transformed, output, mode):
     plt.figure(figsize=(10, 5)) #(15,5)
 
     plt.subplot(1, 2, 1) #(1,3,1)
@@ -218,7 +217,6 @@ def main():
         image_paths = [path.strip() for path in image_paths]
 
     elif choice == '3':
-
         mode = 'encode'  # or 'decode' to decode multiple at once
         image_paths = PREDEFINED_IMAGE_PATHS
 
