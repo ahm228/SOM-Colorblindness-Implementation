@@ -142,13 +142,26 @@ def encode_with_som(image, som, batch_size=1024):
     return np.array(encoded_image).reshape(image.shape)
 
 # Decoding function should change an encoded image back to the original image (Still learning?)
-def decode_with_som(encoded_image, som, batch_size=1024):
+def decode_with_som(encoded_image, som, original_to_deuteranopia, batch_size=1024):
     reshaped_encoded = normalize_image(encoded_image).reshape(-1, 3)
     decoded_image = []
 
+    # Build a dictionary for mapping SOM weights to original colors
+    weight_to_original = {}
+    for original, deuteranopia in original_to_deuteranopia:
+        for orig_pixel, deut_pixel in zip(original, deuteranopia):
+            bmu = som.winner(deut_pixel)
+            weight_to_original[tuple(som.weights[bmu])] = orig_pixel
+
     for i in range(0, len(reshaped_encoded), batch_size):
         batch = reshaped_encoded[i:i + batch_size]
-        decoded_batch = som.quantization(batch)
+
+        # Map each pixel in the batch to its corresponding original color
+        decoded_batch = []
+        for pixel in batch:
+            bmu = som.winner(pixel)
+            som_weight = tuple(som.weights[bmu])
+            decoded_batch.append(weight_to_original.get(som_weight, pixel))  # Default to input pixel if no match
         decoded_image.extend(decoded_batch)
 
     return np.array(decoded_image).reshape(encoded_image.shape)
