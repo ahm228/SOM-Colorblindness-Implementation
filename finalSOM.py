@@ -203,7 +203,7 @@ def process_image(image_path, mode, som):
         )
 
     elif mode == 'decode':
-        decoded_image = decode_with_som(normalize_image(resized_image), som)
+        decoded_image = decode_with_som(normalize_image(resized_image), som, original_to_deuteranopia)
 
         display_and_save_images(
             resized_image,
@@ -244,7 +244,7 @@ def main():
 
     # returns if the image paths are valid and will let user know that the computer is thinking 
     if all(os.path.exists(path) for path in image_paths):
-        som = train_on_multiple_images(image_paths)
+        som, original_to_deuteranopia = train_on_multiple_images(image_paths)
 
         for image_path in image_paths:
             print(f"\nProcessing {image_path}...")
