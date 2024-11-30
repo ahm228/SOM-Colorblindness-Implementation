@@ -224,13 +224,11 @@ def main():
 
     if choice == '1':
         mode = 'encode'
-        # i put this here to test single images instead of so many at once
         image_paths = input("Enter the paths of image files separated by commas: ").split(',')
         image_paths = [path.strip() for path in image_paths]
 
     elif choice == '2':
         mode = 'decode'
-        # i put this here to test single images instead of so many at once
         image_paths = input("Enter the paths of image files separated by commas: ").split(',')
         image_paths = [path.strip() for path in image_paths]
 
@@ -242,13 +240,13 @@ def main():
         print("Invalid option selected. Exiting.")
         return
 
-    # returns if the image paths are valid and will let user know that the computer is thinking 
     if all(os.path.exists(path) for path in image_paths):
+        print("Training SOM... Please wait.")
         som, original_to_deuteranopia = train_on_multiple_images(image_paths)
 
         for image_path in image_paths:
             print(f"\nProcessing {image_path}...")
-            process_image(image_path, mode, som)
+            process_image(image_path, mode, som, original_to_deuteranopia if mode == 'decode' else None)
     else:
         print("One or more files not found. Please try again.")
 
