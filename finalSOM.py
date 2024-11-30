@@ -96,33 +96,38 @@ def resize_image(image, target_size=(256, 256)):
     return cv2.resize(image, target_size, interpolation=cv2.INTER_AREA)
 
 # Function to train the SOM with multiple images
-def train_on_multiple_images(image_paths, som_size=16): #som size can be editted make images better or worse depends
+def train_on_multiple_images(image_paths, som_size=16):
     all_training_data = []
+    original_to_deuteranopia = []
 
     for image_path in image_paths:
-        # Processes the original input image
+        # Process the original input image
         original_image = cv2.imread(image_path)
         original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
         original_image = resize_image(original_image)
         original_image = normalize_image(original_image)
 
-        # Transforms original to the deteranopia image simulation
+        # Transform original to Deuteranopia image simulation
         deuteranopia_image = simulate_color_blindness(original_image)
 
-        # Concatenation of both images to train the simulation
+        # Flatten and concatenate for training
         reshaped_original = original_image.reshape(-1, 3)
         reshaped_deuteranopia = deuteranopia_image.reshape(-1, 3)
-        all_training_data.append(np.concatenate((reshaped_original, reshaped_deuteranopia)))
+        concatenated_data = np.concatenate((reshaped_original, reshaped_deuteranopia))
 
-    # Makes an array of the data ^
+        all_training_data.append(concatenated_data)
+        original_to_deuteranopia.append((reshaped_original, reshaped_deuteranopia))
+
+    # Combine all data
     all_training_data = np.vstack(all_training_data)
 
-    # Starts training the SOM
+    # Train SOM
     som = MiniSom(som_size, som_size, 3, sigma=1.0, learning_rate=0.5)
     som.random_weights_init(all_training_data)
-    som.train_random(all_training_data, 5000) # interations can be changed but just be mindful
+    som.train_random(all_training_data, 5000)
 
-    return som
+    # Store mapping for decoding
+    return som, original_to_deuteranopia
 
 # Encoding changes original to the deuteranopia image
 def encode_with_som(image, som, batch_size=1024):
