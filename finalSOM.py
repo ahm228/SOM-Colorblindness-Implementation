@@ -186,12 +186,14 @@ def display_and_save_images(original, transformed, output, mode):
     plt.show()
 
 # Function to process the image based on encode or decode which ever is chosen by user
-def process_image(image_path, mode, som):
+def process_image(image_path, mode, som, original_to_deuteranopia=None):
+    # Load and preprocess the original image
     original_image = cv2.imread(image_path)
     original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
     resized_image = resize_image(original_image)
 
     if mode == 'encode':
+        # Simulate color blindness and encode
         color_blind_image = simulate_color_blindness(normalize_image(resized_image))
         encoded_image = encode_with_som(color_blind_image, som)
 
@@ -203,6 +205,9 @@ def process_image(image_path, mode, som):
         )
 
     elif mode == 'decode':
+        if original_to_deuteranopia is None:
+            raise ValueError("Original-to-Deuteranopia mapping is required for decoding.")
+
         decoded_image = decode_with_som(normalize_image(resized_image), som, original_to_deuteranopia)
 
         display_and_save_images(
@@ -211,7 +216,6 @@ def process_image(image_path, mode, som):
             denormalize_image(decoded_image),
             "Decoded"
         )
-
 
 # Command-line interface to choose the mode
 def main():
