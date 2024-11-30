@@ -146,12 +146,15 @@ def decode_with_som(encoded_image, som, original_to_deuteranopia, batch_size=102
     reshaped_encoded = normalize_image(encoded_image).reshape(-1, 3)
     decoded_image = []
 
+    # Access SOM weights correctly
+    som_weights = som.get_weights()
+
     # Build a dictionary for mapping SOM weights to original colors
     weight_to_original = {}
     for original, deuteranopia in original_to_deuteranopia:
         for orig_pixel, deut_pixel in zip(original, deuteranopia):
             bmu = som.winner(deut_pixel)
-            weight_to_original[tuple(som.weights[bmu])] = orig_pixel
+            weight_to_original[tuple(som_weights[bmu])] = orig_pixel
 
     for i in range(0, len(reshaped_encoded), batch_size):
         batch = reshaped_encoded[i:i + batch_size]
@@ -160,7 +163,7 @@ def decode_with_som(encoded_image, som, original_to_deuteranopia, batch_size=102
         decoded_batch = []
         for pixel in batch:
             bmu = som.winner(pixel)
-            som_weight = tuple(som.weights[bmu])
+            som_weight = tuple(som_weights[bmu])
             decoded_batch.append(weight_to_original.get(som_weight, pixel))  # Default to input pixel if no match
         decoded_image.extend(decoded_batch)
 
