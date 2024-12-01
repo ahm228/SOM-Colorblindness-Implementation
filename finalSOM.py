@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from minisom import MiniSom  # Self-Organizing Map
+from minisom import MiniSom
 import os
 
 
-# Predefined list of image paths (these files are on my laptop, i can email if needed)
+# Predefined list of image paths
 PREDEFINED_IMAGE_PATHS = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\1.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\2.jpg',
@@ -83,7 +83,7 @@ def simulate_color_blindness(image):
                        [0, 0.24167, 0.75833]])
     return np.dot(image, matrix.T)
 
-# Function to normalize pixel values to 0-1 basically handles negative values
+# Function to normalize pixel values to 0-1
 def normalize_image(image):
     return np.clip(image.astype('float32') / 255, 0, 1)
 
@@ -91,7 +91,7 @@ def normalize_image(image):
 def denormalize_image(image):
     return np.clip(image * 255, 0, 255).astype('uint8')
 
-# Function resizes the images to be 256x256 pixels because some images i have are HUGE
+# Function resizes the images to be 256x256 pixels
 def resize_image(image, target_size=(256, 256)):
     return cv2.resize(image, target_size, interpolation=cv2.INTER_AREA)
 
@@ -187,7 +187,7 @@ def display_and_save_images(original, transformed, output, mode):
     plt.tight_layout()
     plt.show()
 
-# Function to process the image based on encode or decode which ever is chosen by user
+# Function to process the image based on encode or decode
 def process_image(image_path, mode, som, original_to_deuteranopia=None):
     # Load and preprocess the original image
     original_image = cv2.imread(image_path)
@@ -219,7 +219,7 @@ def process_image(image_path, mode, som, original_to_deuteranopia=None):
             "Decoded"
         )
 
-# Command-line interface to choose the mode
+# Command-line interface
 def main():
     print("Welcome to the Color Blindness Simulation Program!\n")
     print("1. Encode (Original -> Color Blindness Simulation)")
@@ -256,7 +256,5 @@ def main():
     else:
         print("One or more files not found. Please try again.")
 
-
-# Run the program
 if __name__ == '__main__':
     main()
