@@ -9,7 +9,6 @@ Features
     Predefined Batch Training: Loads and processes images from a predefined set of paths for continuous training.
 
 Prerequisites
-Libraries
 
     TensorFlow (tensorflow)
     NumPy (numpy)
