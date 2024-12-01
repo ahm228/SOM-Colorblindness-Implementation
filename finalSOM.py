@@ -141,33 +141,32 @@ def encode_with_som(image, som, batch_size=1024):
 
     return np.array(encoded_image).reshape(image.shape)
 
-# Decoding function should change an encoded image back to the original image (Still learning?)
-def decode_with_som(encoded_image, som, original_to_deuteranopia, batch_size=1024):
+def decode_with_som(encoded_image, som, original_to_deuteranopia, som_size=16):
     reshaped_encoded = normalize_image(encoded_image).reshape(-1, 3)
-    decoded_image = []
-
-    # Access SOM weights correctly
     som_weights = som.get_weights()
 
-    # Build a dictionary for mapping SOM weights to original colors
+    # Create mapping from BMU indices to original pixels
     weight_to_original = {}
     for original, deuteranopia in original_to_deuteranopia:
         for orig_pixel, deut_pixel in zip(original, deuteranopia):
             bmu = som.winner(deut_pixel)
-            weight_to_original[tuple(som_weights[bmu])] = orig_pixel
+            weight_to_original[bmu] = orig_pixel
 
-    for i in range(0, len(reshaped_encoded), batch_size):
-        batch = reshaped_encoded[i:i + batch_size]
+    # Default mapping for missing BMUs
+    for x in range(som_size):
+        for y in range(som_size):
+            bmu = (x, y)
+            if bmu not in weight_to_original:
+                weight_to_original[bmu] = som_weights[x, y]  # Default to SOM weights
 
-        # Map each pixel in the batch to its corresponding original color
-        decoded_batch = []
-        for pixel in batch:
-            bmu = som.winner(pixel)
-            som_weight = tuple(som_weights[bmu])
-            decoded_batch.append(weight_to_original.get(som_weight, pixel))  # Default to input pixel if no match
-        decoded_image.extend(decoded_batch)
+    # Decode the image
+    decoded_image = []
+    for pixel in reshaped_encoded:
+        bmu = som.winner(pixel)
+        decoded_image.append(weight_to_original.get(bmu, pixel))  # Default to input pixel if no match
 
-    return np.array(decoded_image).reshape(encoded_image.shape)
+    # Denormalize and reshape to original dimensions
+    return denormalize_image(np.array(decoded_image).reshape(encoded_image.shape))
 
 # Function to display the output of what the SOM does (commented out values just change whats outputted)
 def display_and_save_images(original, transformed, output, mode):
