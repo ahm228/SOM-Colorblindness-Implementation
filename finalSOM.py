@@ -7,6 +7,18 @@ import os
 
 # Predefined list of image paths
 PREDEFINED_IMAGE_PATHS = [
+    r"C:\Users\Drewm\Downloads\encoded-giraffe.png",
+    r"C:\Users\Drewm\Downloads\rg-giraffe.webp",
+    r"C:\Users\Drewm\Downloads\rg-w.jpg",
+    r"C:\Users\Drewm\Downloads\color-blind-adult-pediatric-eyecare-local-eye-doctor-near-you.jpg",
+    r"C:\Users\Drewm\Downloads\output_image.jpg",
+    r"C:\Users\Drewm\Downloads\rg-colorblind-74.png",
+    r"C:\Users\Drewm\Downloads\tree-image.jpg",
+    r"C:\Users\Drewm\Downloads\Solid_red.svg.png",
+    r"C:\Users\Drewm\Downloads\encoded-red.png",
+]
+
+other_paths = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\1.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\2.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\3.jpg',
@@ -74,7 +86,6 @@ PREDEFINED_IMAGE_PATHS = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\65.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\66.jpg',
 ]
-
 
 # Simulates red-green color blindness (Deuteranopia) using a matrix transformation. The operation is fully vectorized for efficiency.
 def simulate_color_blindness(image):
@@ -239,7 +250,8 @@ def main():
         image_paths = [path.strip() for path in image_paths]
 
     elif choice == '3':
-        mode = 'encode'  # or 'decode' to decode multiple at once
+        mode = 'encode'
+        #mode = 'decode'
         image_paths = PREDEFINED_IMAGE_PATHS
 
     else:
