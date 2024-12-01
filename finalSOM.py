@@ -76,7 +76,7 @@ PREDEFINED_IMAGE_PATHS = [
 ]
 
 
-# Function to simulate red-green color blindness (Deuteranopia)
+# Simulates red-green color blindness (Deuteranopia) using a matrix transformation. The operation is fully vectorized for efficiency.
 def simulate_color_blindness(image):
     matrix = np.array([[0.56667, 0.43333, 0],
                        [0.55833, 0.44167, 0],
