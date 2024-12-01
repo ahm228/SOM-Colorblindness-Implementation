@@ -17,12 +17,14 @@ Prerequisites
 
 How to Use
 
-    Setup Image Paths: Replace the PREDEFINED_IMAGE_PATHS list with paths to your own images.
+    Setup Image Paths: Replace the PREDEFINED_IMAGE_PATHS list with paths to chosen images (I provided all images used with model testing)
     Run the Script: Execute the Python script to start the training process.
     Visual Feedback: After each training iteration, the script will display:
         The original image.
         The simulated color-blind image.
         The reconstructed image.
+    To see other images listed if more than one, simply press the X on the output and the code will run through 300 epochs again for the next image
+    Recommended: only testing 5 images at a time, unless you have the time to sit and wait on the progam to run
 
 Key Functions
 1. simulate_color_blindness(image)
