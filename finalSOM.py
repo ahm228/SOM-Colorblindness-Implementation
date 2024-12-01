@@ -1,12 +1,23 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from minisom import MiniSom  # Self-Organizing Map
+from minisom import MiniSom
 import os
 
-
-# Predefined list of image paths (these files are on my laptop, i can email if needed)
+# Predefined list of image paths
 PREDEFINED_IMAGE_PATHS = [
+    r"C:\Users\Drewm\Downloads\encoded-giraffe.png",
+    r"C:\Users\Drewm\Downloads\rg-giraffe.webp",
+    r"C:\Users\Drewm\Downloads\rg-w.jpg",
+    r"C:\Users\Drewm\Downloads\color-blind-adult-pediatric-eyecare-local-eye-doctor-near-you.jpg",
+    r"C:\Users\Drewm\Downloads\output_image.jpg",
+    r"C:\Users\Drewm\Downloads\rg-colorblind-74.png",
+    r"C:\Users\Drewm\Downloads\tree-image.jpg",
+    r"C:\Users\Drewm\Downloads\Solid_red.svg.png",
+    r"C:\Users\Drewm\Downloads\encoded-red.png",
+]
+
+other_paths = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\1.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\2.jpg',
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\3.jpg',
@@ -75,15 +86,14 @@ PREDEFINED_IMAGE_PATHS = [
     r'C:\Users\kmang\OneDrive\Desktop\Color Blind\66.jpg',
 ]
 
-
-# Function to simulate red-green color blindness (Deuteranopia)
+# Simulates red-green color blindness (Deuteranopia) using a matrix transformation. The operation is fully vectorized for efficiency.
 def simulate_color_blindness(image):
     matrix = np.array([[0.56667, 0.43333, 0],
                        [0.55833, 0.44167, 0],
                        [0, 0.24167, 0.75833]])
     return np.dot(image, matrix.T)
 
-# Function to normalize pixel values to 0-1 basically handles negative values
+# Function to normalize pixel values to 0-1
 def normalize_image(image):
     return np.clip(image.astype('float32') / 255, 0, 1)
 
@@ -91,38 +101,43 @@ def normalize_image(image):
 def denormalize_image(image):
     return np.clip(image * 255, 0, 255).astype('uint8')
 
-# Function resizes the images to be 256x256 pixels because some images i have are HUGE
+# Function resizes the images to be 256x256 pixels
 def resize_image(image, target_size=(256, 256)):
     return cv2.resize(image, target_size, interpolation=cv2.INTER_AREA)
 
 # Function to train the SOM with multiple images
-def train_on_multiple_images(image_paths, som_size=16): #som size can be editted make images better or worse depends
+def train_on_multiple_images(image_paths, som_size=16):
     all_training_data = []
+    original_to_deuteranopia = []
 
     for image_path in image_paths:
-        # Processes the original input image
+        # Process the original input image
         original_image = cv2.imread(image_path)
         original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
         original_image = resize_image(original_image)
         original_image = normalize_image(original_image)
 
-        # Transforms original to the deteranopia image simulation
+        # Transform original to Deuteranopia image simulation
         deuteranopia_image = simulate_color_blindness(original_image)
 
-        # Concatenation of both images to train the simulation
+        # Flatten and concatenate for training
         reshaped_original = original_image.reshape(-1, 3)
         reshaped_deuteranopia = deuteranopia_image.reshape(-1, 3)
-        all_training_data.append(np.concatenate((reshaped_original, reshaped_deuteranopia)))
+        concatenated_data = np.concatenate((reshaped_original, reshaped_deuteranopia))
 
-    # Makes an array of the data ^
+        all_training_data.append(concatenated_data)
+        original_to_deuteranopia.append((reshaped_original, reshaped_deuteranopia))
+
+    # Combine all data
     all_training_data = np.vstack(all_training_data)
 
-    # Starts training the SOM
+    # Train SOM
     som = MiniSom(som_size, som_size, 3, sigma=1.0, learning_rate=0.5)
     som.random_weights_init(all_training_data)
-    som.train_random(all_training_data, 5000) # interations can be changed but just be mindful
+    som.train_random(all_training_data, 5000)
 
-    return som
+    # Store mapping for decoding
+    return som, original_to_deuteranopia
 
 # Encoding changes original to the deuteranopia image
 def encode_with_som(image, som, batch_size=1024):
@@ -136,17 +151,32 @@ def encode_with_som(image, som, batch_size=1024):
 
     return np.array(encoded_image).reshape(image.shape)
 
-# Decoding function should change an encoded image back to the original image (Still learning?)
-def decode_with_som(encoded_image, som, batch_size=1024):
+def decode_with_som(encoded_image, som, original_to_deuteranopia, som_size=16):
     reshaped_encoded = normalize_image(encoded_image).reshape(-1, 3)
+    som_weights = som.get_weights()
+
+    # Create mapping from BMU indices to original pixels
+    weight_to_original = {}
+    for original, deuteranopia in original_to_deuteranopia:
+        for orig_pixel, deut_pixel in zip(original, deuteranopia):
+            bmu = som.winner(deut_pixel)
+            weight_to_original[bmu] = orig_pixel
+
+    # Default mapping for missing BMUs
+    for x in range(som_size):
+        for y in range(som_size):
+            bmu = (x, y)
+            if bmu not in weight_to_original:
+                weight_to_original[bmu] = som_weights[x, y]  # Default to SOM weights
+
+    # Decode the image
     decoded_image = []
+    for pixel in reshaped_encoded:
+        bmu = som.winner(pixel)
+        decoded_image.append(weight_to_original.get(bmu, pixel))  # Default to input pixel if no match
 
-    for i in range(0, len(reshaped_encoded), batch_size):
-        batch = reshaped_encoded[i:i + batch_size]
-        decoded_batch = som.quantization(batch)
-        decoded_image.extend(decoded_batch)
-
-    return np.array(decoded_image).reshape(encoded_image.shape)
+    # Denormalize and reshape to original dimensions
+    return denormalize_image(np.array(decoded_image).reshape(encoded_image.shape))
 
 # Function to display the output of what the SOM does (commented out values just change whats outputted)
 def display_and_save_images(original, transformed, output, mode):
@@ -167,13 +197,15 @@ def display_and_save_images(original, transformed, output, mode):
     plt.tight_layout()
     plt.show()
 
-# Function to process the image based on encode or decode which ever is chosen by user
-def process_image(image_path, mode, som):
+# Function to process the image based on encode or decode
+def process_image(image_path, mode, som, original_to_deuteranopia=None):
+    # Load and preprocess the original image
     original_image = cv2.imread(image_path)
     original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
     resized_image = resize_image(original_image)
 
     if mode == 'encode':
+        # Simulate color blindness and encode
         color_blind_image = simulate_color_blindness(normalize_image(resized_image))
         encoded_image = encode_with_som(color_blind_image, som)
 
@@ -185,7 +217,10 @@ def process_image(image_path, mode, som):
         )
 
     elif mode == 'decode':
-        decoded_image = decode_with_som(normalize_image(resized_image), som)
+        if original_to_deuteranopia is None:
+            raise ValueError("Original-to-Deuteranopia mapping is required for decoding.")
+
+        decoded_image = decode_with_som(normalize_image(resized_image), som, original_to_deuteranopia)
 
         display_and_save_images(
             resized_image,
@@ -194,8 +229,7 @@ def process_image(image_path, mode, som):
             "Decoded"
         )
 
-
-# Command-line interface to choose the mode
+# Command-line interface
 def main():
     print("Welcome to the Color Blindness Simulation Program!\n")
     print("1. Encode (Original -> Color Blindness Simulation)")
@@ -206,35 +240,32 @@ def main():
 
     if choice == '1':
         mode = 'encode'
-        # i put this here to test single images instead of so many at once
         image_paths = input("Enter the paths of image files separated by commas: ").split(',')
         image_paths = [path.strip() for path in image_paths]
 
     elif choice == '2':
         mode = 'decode'
-        # i put this here to test single images instead of so many at once
         image_paths = input("Enter the paths of image files separated by commas: ").split(',')
         image_paths = [path.strip() for path in image_paths]
 
     elif choice == '3':
-        mode = 'encode'  # or 'decode' to decode multiple at once
+        mode = 'encode'
+        #mode = 'decode'
         image_paths = PREDEFINED_IMAGE_PATHS
 
     else:
         print("Invalid option selected. Exiting.")
         return
 
-    # returns if the image paths are valid and will let user know that the computer is thinking 
     if all(os.path.exists(path) for path in image_paths):
-        som = train_on_multiple_images(image_paths)
+        print("Training SOM... Please wait.")
+        som, original_to_deuteranopia = train_on_multiple_images(image_paths)
 
         for image_path in image_paths:
             print(f"\nProcessing {image_path}...")
-            process_image(image_path, mode, som)
+            process_image(image_path, mode, som, original_to_deuteranopia if mode == 'decode' else None)
     else:
         print("One or more files not found. Please try again.")
 
-
-# Run the program
 if __name__ == '__main__':
     main()
