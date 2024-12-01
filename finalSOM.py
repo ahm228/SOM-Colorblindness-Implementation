@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from minisom import MiniSom
 import os
 
-
 # Predefined list of image paths
 PREDEFINED_IMAGE_PATHS = [
     r"C:\Users\Drewm\Downloads\encoded-giraffe.png",
