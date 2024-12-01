@@ -1,84 +1,70 @@
-This Python program simulates red-green color blindness (Deuteranopia) and provides a way to encode and decode images using Self-Organizing Maps (SOMs). It allows users to visually understand how individuals with color blindness perceive images and explore reconstruction techniques for color-blind-transformed images.
+Overview
+
+This project implements an autoencoder neural network using TensorFlow and Keras to reconstruct images perceived under simulated red-green color blindness (Deuteranopia). The model is trained to transform a color-blind view of an image back into its original representation, providing an enhanced visualization for individuals with color blindness.
 Features
 
-    Simulate Deuteranopia:
-        Applies a transformation matrix to simulate how images appear to individuals with red-green color blindness.
-
-    Self-Organizing Map (SOM) Encoding:
-        Encodes transformed images into a reduced representation using SOM, a type of unsupervised neural network.
-
-    Decoding:
-        Attempts to reconstruct original images from the encoded representation.
-
-    Preprocessing:
-        Resizes and normalizes images for efficient processing.
-
-    Training:
-        Trains SOM on both original and simulated images for better representation.
-
-    Visualization:
-        Displays the original, color-blindness-simulated, and SOM-processed images side-by-side for comparison.
+    Color Blindness Simulation: Simulates red-green color blindness using a color transformation matrix.
+    Autoencoder Architecture: A convolutional autoencoder is used for reconstructing images.
+    Real-Time Feedback: Visualizes the original, color-blind simulated, and reconstructed images during training.
+    Predefined Batch Training: Loads and processes images from a predefined set of paths for continuous training.
 
 Prerequisites
+Libraries
 
-Before running the program, ensure you have the following installed:
+    TensorFlow (tensorflow)
+    NumPy (numpy)
+    OpenCV (cv2)
+    Matplotlib (matplotlib)
 
-    Python 3.7 or higher
-    Required Python libraries: pip install numpy opencv-python matplotlib minisom
-    
-Usage
-Step 1: Prepare Images
+How to Use
 
-    Store your images locally and either:
-        Update the PREDEFINED_IMAGE_PATHS list in the code with the file paths.
-        Provide image paths during runtime.
+    Setup Image Paths: Replace the PREDEFINED_IMAGE_PATHS list with paths to your own images.
+    Run the Script: Execute the Python script to start the training process.
+    Visual Feedback: After each training iteration, the script will display:
+        The original image.
+        The simulated color-blind image.
+        The reconstructed image.
 
-Step 2: Run the Program
+Key Functions
+1. simulate_color_blindness(image)
 
-    Save the script as color_blindness_simulation.py.
-    Execute the script: python finalSOM.py
-    
-Step 3: Choose an Option
+Simulates red-green color blindness (Deuteranopia) using a transformation matrix.
+2. load_image(image_path, target_size=(256, 256))
 
-    Option 1: Encode
-    Simulates how the image appears to a color-blind individual.
-    Option 2: Decode
-    Attempts to reconstruct the original image from its encoded (simulated) version.
-    Option 3: Use Predefined Image Paths
-    Processes multiple images at once based on the predefined paths.
+Loads and preprocesses an image:
 
-Step 4: Inspect Results
+    Converts to RGB.
+    Resizes to the target dimensions.
+    Normalizes pixel values to [0, 1].
 
-    View the images displayed by the program to compare transformations and reconstructions.
+3. build_autoencoder(input_shape)
 
-How It Works
+Defines the autoencoder architecture:
 
-    Simulating Color Blindness:
-        A transformation matrix simulates Deuteranopia by altering RGB channels.
+    Encoder: Two convolutional layers with max-pooling.
+    Decoder: Two deconvolutional layers with upsampling.
 
-    Training SOM:
-        Combines data from the original and color-blind images to train a Self-Organizing Map.
+4. display_results(original, transformed, reconstructed)
 
-    Encoding and Decoding:
-        Encodes images into the SOM's quantized space.
-        Decodes images by mapping back from the SOM's space.
+Displays the original, color-blind simulated, and reconstructed images side-by-side using Matplotlib.
+Model Training
 
-    Visualization:
-        Uses Matplotlib to plot and compare the original, simulated, and processed images.
+The model is trained continuously on individual image batches:
+
+    Input: Simulated color-blind images.
+    Target: Original images.
+    Loss: Mean squared error (MSE).
+
+Each image batch undergoes 300 epochs of training, and reconstructed results are displayed after training.
 
 Customization
 
-    Adjusting SOM Size:
-        Modify the som_size parameter in train_on_multiple_images() to control SOM grid resolution.
+    Adjust Input Shape: Modify input_shape to fit your dataset dimensions.
+    Change Training Parameters: Update the number of epochs or batch size to suit your hardware.
+    Add More Images: Extend the PREDEFINED_IMAGE_PATHS list with more image paths.
 
-    Training Iterations:
-        Adjust the number of iterations (5000 by default) to improve SOM accuracy.
+Future Work
 
-    Image Resizing:
-        Change the target_size in the resize_image() function to match your desired output dimensions.
-
-Known Limitations
-
-    Decoding may not perfectly reconstruct original images due to information loss during encoding.
-    Large images can slow processing; resizing to 256x256 pixels is recommended.
-    Image paths must be valid and accessible.
+    Extend the model to handle other types of color blindness (e.g., Protanopia, Tritanopia).
+    Enhance model accuracy with larger datasets and more diverse training samples.
+    Deploy the model as a web or mobile application for real-time image correction.
